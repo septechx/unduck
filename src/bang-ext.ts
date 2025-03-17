@@ -1,6 +1,6 @@
 export const bangsExt = [
   {
     t: "sxng",
-    u: "https://searx.be/search?q={{{s}}}",
+    u: "https://searxng.siesque.com/search?q={{{s}}}",
   },
 ];
