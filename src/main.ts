@@ -1,13 +1,62 @@
 import { bangs as ddgBangs } from "./bang";
-import { bangsExt } from "./bang-ext";
+import { bangs as bangsExt } from "./bang-ext";
 import "./global.css";
 
 const bangs = [...ddgBangs, ...bangsExt];
 
+const initialTheme = getTheme();
+setTheme(initialTheme);
+
+function setTheme(theme: "light" | "dark") {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("theme", theme);
+}
+
+function getTheme(): "light" | "dark" {
+  const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+  if (savedTheme) {
+    return savedTheme;
+  }
+
+  if (
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return "dark";
+  }
+
+  return "light";
+}
+
+function toggleTheme() {
+  const currentTheme = getTheme();
+  const newTheme = currentTheme === "light" ? "dark" : "light";
+  setTheme(newTheme);
+  updateThemeToggleIcon(newTheme);
+}
+
+function updateThemeToggleIcon(theme: "light" | "dark") {
+  const themeToggle =
+    document.querySelector<HTMLButtonElement>(".theme-toggle");
+  if (!themeToggle) return;
+
+  const iconSrc = theme === "light" ? "/moon.svg" : "/sun.svg";
+  const iconAlt =
+    theme === "light" ? "Switch to dark mode" : "Switch to light mode";
+
+  themeToggle.innerHTML = `<img src="${iconSrc}" alt="${iconAlt}" />`;
+}
+
 function noSearchDefaultPageRender() {
+  const initialTheme = getTheme();
+  setTheme(initialTheme);
+
   const app = document.querySelector<HTMLDivElement>("#app")!;
   app.innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+      <button class="theme-toggle" aria-label="Toggle dark mode">
+        <img src="${initialTheme === "light" ? "/moon.svg" : "/sun.svg"}" alt="${initialTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}" />
+      </button>
       <div class="content-container">
         <h1>Und*ck</h1>
         <p>DuckDuckGo's bang redirects are too slow. Add the following URL as a custom search engine to your browser. Enables <a href="https://duckduckgo.com/bang.html" target="_blank">all of DuckDuckGo's bangs.</a></p>
@@ -22,6 +71,14 @@ function noSearchDefaultPageRender() {
             <img src="/clipboard.svg" alt="Copy" />
           </button>
         </div>
+        <label class="bang-container">
+          <p>Default Bang (currently <span class="bang-current"></span>)</p>
+          <input
+            class="bang-input"
+            type="text"
+            value="sxng"
+          />
+        </label>
       </div>
       <footer class="footer">
         <a href="https://github.com/septechx/unduck" target="_blank">github</a>
@@ -32,6 +89,9 @@ function noSearchDefaultPageRender() {
   const copyButton = app.querySelector<HTMLButtonElement>(".copy-button")!;
   const copyIcon = copyButton.querySelector("img")!;
   const urlInput = app.querySelector<HTMLInputElement>(".url-input")!;
+  const themeToggle = app.querySelector<HTMLButtonElement>(".theme-toggle")!;
+  const bangInput = app.querySelector<HTMLInputElement>(".bang-input")!;
+  const bangCurrent = app.querySelector<HTMLSpanElement>(".bang-current")!;
 
   copyButton.addEventListener("click", async () => {
     await navigator.clipboard.writeText(urlInput.value);
@@ -41,6 +101,22 @@ function noSearchDefaultPageRender() {
       copyIcon.src = "/clipboard.svg";
     }, 2000);
   });
+
+  bangCurrent.innerText = bangInput.value =
+    localStorage.getItem("default-bang") ?? "g";
+
+  bangInput.addEventListener("input", () => {
+    if (!bangInput.value) return;
+    if (bangs.some((b) => b.t === bangInput.value)) {
+      localStorage.setItem("default-bang", bangInput.value);
+      bangInput.setCustomValidity("");
+      bangCurrent.innerText = bangInput.value;
+    } else {
+      bangInput.setCustomValidity("Unknown bang");
+    }
+  });
+
+  themeToggle.addEventListener("click", toggleTheme);
 }
 
 const LS_DEFAULT_BANG = localStorage.getItem("default-bang") ?? "sxng";
