@@ -103,7 +103,7 @@ function noSearchDefaultPageRender() {
   });
 
   bangCurrent.innerText = bangInput.value =
-    localStorage.getItem("default-bang") ?? "g";
+    localStorage.getItem("default-bang") ?? "sxng";
 
   bangInput.addEventListener("input", () => {
     if (!bangInput.value) return;

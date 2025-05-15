@@ -17,4 +17,13 @@ export const bangs = [
     t: "ppx",
     u: "https://www.perplexity.ai/search/new?focus=internet&q={{s}}}",
   },
+  {
+    c: "Online Services",
+    d: "wiki.fabricmc.net",
+    r: 0,
+    s: "Fabric Wiki",
+    sc: "Fabric Wiki",
+    t: "fw",
+    u: "https://wiki.fabricmc.net/start?do=search&id=start&q=a",
+  },
 ];
