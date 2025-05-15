@@ -2,7 +2,7 @@ import { bangs as ddgBangs } from "./bang";
 import { bangs as bangsExt } from "./bang-ext";
 import "./global.css";
 
-const bangs = [...ddgBangs, ...bangsExt];
+const bangs = [...bangsExt, ...ddgBangs];
 
 const initialTheme = getTheme();
 setTheme(initialTheme);
