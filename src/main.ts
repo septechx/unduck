@@ -2,7 +2,6 @@ import { bangs as ddgBangs } from "./bang";
 import { bangs as bangsExt } from "./bang-ext";
 import "./global.css";
 
-// Load custom bangs from localStorage
 function loadCustomBangs() {
   const customBangsData = localStorage.getItem("custom-bangs") || "";
   if (!customBangsData) return [];
@@ -13,7 +12,6 @@ function loadCustomBangs() {
   for (const item of customBangs) {
     const values = item.split(":");
     if (values.length === 2) {
-      // Extract domain from URL template for the 'd' property
       const urlTemplate = values[1];
       const domainMatch = urlTemplate.match(/https?:\/\/([^\/\?]+)/);
       const domain = domainMatch ? domainMatch[1] : "unknown";
@@ -29,13 +27,11 @@ function loadCustomBangs() {
   return result;
 }
 
-// Save custom bangs to localStorage
 function saveCustomBangs(customBangs: Array<{ t: string, u: string, d: string }>) {
   const customBangsData = customBangs.map(bang => `${bang.t}:${bang.u}`).join(",");
   localStorage.setItem("custom-bangs", customBangsData);
 }
 
-// Render custom bangs list
 function renderCustomBangsList() {
   const customBangs = loadCustomBangs();
   if (customBangs.length === 0) {
@@ -53,7 +49,6 @@ function renderCustomBangsList() {
   `).join('');
 }
 
-// Add new custom bang
 function addCustomBang() {
   const customBangs = loadCustomBangs();
   const newBang = {
@@ -64,7 +59,6 @@ function addCustomBang() {
   customBangs.push(newBang);
   saveCustomBangs(customBangs);
 
-  // Refresh the bangs array and re-render
   const newCustomBangs = loadCustomBangs();
   bangs.length = 0;
   bangs.push(...newCustomBangs, ...bangsExt, ...ddgBangs);
@@ -76,13 +70,11 @@ function addCustomBang() {
   }
 }
 
-// Delete custom bang
 function deleteCustomBang(index: number) {
   const customBangs = loadCustomBangs();
   customBangs.splice(index, 1);
   saveCustomBangs(customBangs);
 
-  // Refresh the bangs array and re-render
   const newCustomBangs = loadCustomBangs();
   bangs.length = 0;
   bangs.push(...newCustomBangs, ...bangsExt, ...ddgBangs);
@@ -94,7 +86,6 @@ function deleteCustomBang(index: number) {
   }
 }
 
-// Setup event listeners for custom bangs
 function setupCustomBangsEventListeners() {
   const addBangButton = document.getElementById('add-bang-button');
   if (addBangButton) {
@@ -109,7 +100,6 @@ function setupCustomBangsEventListeners() {
     });
   });
 
-  // Add event listeners for input fields
   const bangInputs = document.querySelectorAll('.bang-input-field');
   bangInputs.forEach(input => {
     input.addEventListener('input', (e) => {
@@ -135,7 +125,6 @@ function setupCustomBangsEventListeners() {
   });
 }
 
-// Update custom bang
 function updateCustomBang(index: number, field: 'bang' | 'template', value: string) {
   const customBangs = loadCustomBangs();
   if (customBangs[index]) {
@@ -143,13 +132,11 @@ function updateCustomBang(index: number, field: 'bang' | 'template', value: stri
       customBangs[index].t = value;
     } else if (field === 'template') {
       customBangs[index].u = value;
-      // Update domain when template changes
       const domainMatch = value.match(/https?:\/\/([^\/\?]+)/);
       customBangs[index].d = domainMatch ? domainMatch[1] : "unknown";
     }
     saveCustomBangs(customBangs);
 
-    // Refresh the bangs array
     const newCustomBangs = loadCustomBangs();
     bangs.length = 0;
     bangs.push(...newCustomBangs, ...bangsExt, ...ddgBangs);
@@ -282,7 +269,6 @@ function noSearchDefaultPageRender() {
 
   themeToggle.addEventListener("click", toggleTheme);
 
-  // Setup custom bangs event listeners
   setupCustomBangsEventListeners();
 }
 
