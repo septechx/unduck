@@ -2,7 +2,162 @@ import { bangs as ddgBangs } from "./bang";
 import { bangs as bangsExt } from "./bang-ext";
 import "./global.css";
 
-const bangs = [...bangsExt, ...ddgBangs];
+// Load custom bangs from localStorage
+function loadCustomBangs() {
+  const customBangsData = localStorage.getItem("custom-bangs") || "";
+  if (!customBangsData) return [];
+
+  const customBangs = customBangsData.split(",").filter(item => item.trim());
+  const result = [];
+
+  for (const item of customBangs) {
+    const values = item.split(":");
+    if (values.length === 2) {
+      // Extract domain from URL template for the 'd' property
+      const urlTemplate = values[1];
+      const domainMatch = urlTemplate.match(/https?:\/\/([^\/\?]+)/);
+      const domain = domainMatch ? domainMatch[1] : "unknown";
+
+      result.push({
+        t: values[0],
+        u: values[1],
+        d: domain,
+      });
+    }
+  }
+
+  return result;
+}
+
+// Save custom bangs to localStorage
+function saveCustomBangs(customBangs: Array<{ t: string, u: string, d: string }>) {
+  const customBangsData = customBangs.map(bang => `${bang.t}:${bang.u}`).join(",");
+  localStorage.setItem("custom-bangs", customBangsData);
+}
+
+// Render custom bangs list
+function renderCustomBangsList() {
+  const customBangs = loadCustomBangs();
+  if (customBangs.length === 0) {
+    return '<p class="no-custom-bangs">No custom bangs yet. Click "Add New" to create one.</p>';
+  }
+
+  return customBangs.map((bang, index) => `
+    <div class="custom-bang-item editable" data-index="${index}">
+      <input type="text" class="bang-input-field" value="${bang.t}" placeholder="xmpl" data-field="bang" data-index="${index}" />
+      <input type="text" class="template-input-field" value="${bang.u}" placeholder="example.com?q={{query}}" data-field="template" data-index="${index}" />
+      <button class="delete-bang-button" data-index="${index}">
+        <img src="/trash.svg" alt="Delete" />
+      </button>
+    </div>
+  `).join('');
+}
+
+// Add new custom bang
+function addCustomBang() {
+  const customBangs = loadCustomBangs();
+  const newBang = {
+    t: "xmpl",
+    u: "example.com?q={{query}}",
+    d: "example.com"
+  };
+  customBangs.push(newBang);
+  saveCustomBangs(customBangs);
+
+  // Refresh the bangs array and re-render
+  const newCustomBangs = loadCustomBangs();
+  bangs.length = 0;
+  bangs.push(...newCustomBangs, ...bangsExt, ...ddgBangs);
+
+  const customBangsList = document.getElementById('custom-bangs-list');
+  if (customBangsList) {
+    customBangsList.innerHTML = renderCustomBangsList();
+    setupCustomBangsEventListeners();
+  }
+}
+
+// Delete custom bang
+function deleteCustomBang(index: number) {
+  const customBangs = loadCustomBangs();
+  customBangs.splice(index, 1);
+  saveCustomBangs(customBangs);
+
+  // Refresh the bangs array and re-render
+  const newCustomBangs = loadCustomBangs();
+  bangs.length = 0;
+  bangs.push(...newCustomBangs, ...bangsExt, ...ddgBangs);
+
+  const customBangsList = document.getElementById('custom-bangs-list');
+  if (customBangsList) {
+    customBangsList.innerHTML = renderCustomBangsList();
+    setupCustomBangsEventListeners();
+  }
+}
+
+// Setup event listeners for custom bangs
+function setupCustomBangsEventListeners() {
+  const addBangButton = document.getElementById('add-bang-button');
+  if (addBangButton) {
+    addBangButton.addEventListener('click', addCustomBang);
+  }
+
+  const deleteButtons = document.querySelectorAll('.delete-bang-button');
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      const index = parseInt((e.currentTarget as HTMLElement).dataset.index || '0');
+      deleteCustomBang(index);
+    });
+  });
+
+  // Add event listeners for input fields
+  const bangInputs = document.querySelectorAll('.bang-input-field');
+  bangInputs.forEach(input => {
+    input.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      const index = parseInt(target.dataset.index || '0');
+      const field = target.dataset.field;
+      const value = target.value;
+
+      updateCustomBang(index, field as 'bang' | 'template', value);
+    });
+  });
+
+  const templateInputs = document.querySelectorAll('.template-input-field');
+  templateInputs.forEach(input => {
+    input.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      const index = parseInt(target.dataset.index || '0');
+      const field = target.dataset.field;
+      const value = target.value;
+
+      updateCustomBang(index, field as 'bang' | 'template', value);
+    });
+  });
+}
+
+// Update custom bang
+function updateCustomBang(index: number, field: 'bang' | 'template', value: string) {
+  const customBangs = loadCustomBangs();
+  if (customBangs[index]) {
+    if (field === 'bang') {
+      customBangs[index].t = value;
+    } else if (field === 'template') {
+      customBangs[index].u = value;
+      // Update domain when template changes
+      const domainMatch = value.match(/https?:\/\/([^\/\?]+)/);
+      customBangs[index].d = domainMatch ? domainMatch[1] : "unknown";
+    }
+    saveCustomBangs(customBangs);
+
+    // Refresh the bangs array
+    const newCustomBangs = loadCustomBangs();
+    bangs.length = 0;
+    bangs.push(...newCustomBangs, ...bangsExt, ...ddgBangs);
+  }
+}
+
+const customBangs = loadCustomBangs();
+const bangs = [...customBangs, ...bangsExt, ...ddgBangs];
 
 const initialTheme = getTheme();
 setTheme(initialTheme);
@@ -55,7 +210,7 @@ function noSearchDefaultPageRender() {
   app.innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
       <button class="theme-toggle" aria-label="Toggle dark mode">
-        <img src="${initialTheme === "light" ? "/moon.svg" : "/sun.svg"}" alt="${initialTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}" />
+        <img src="${initialTheme === "light" ? "/moon.svg" : "/sun.svg"}" alt="${initialTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}" style="filter: var(--svg-filter);" />
       </button>
       <div class="content-container">
         <h1>Und*ck</h1>
@@ -79,6 +234,15 @@ function noSearchDefaultPageRender() {
             value="sxng"
           />
         </label>
+        <div class="custom-bangs-container">
+          <h3>Custom Bangs</h3>
+          <div class="custom-bangs-list" id="custom-bangs-list">
+            ${renderCustomBangsList()}
+          </div>
+          <div class="flex justify-center">
+            <button class="add-bang-button" id="add-bang-button">Add New</button>
+          </div>
+        </div>
       </div>
       <footer class="footer">
         <a href="https://github.com/septechx/unduck" target="_blank">github</a>
@@ -117,6 +281,9 @@ function noSearchDefaultPageRender() {
   });
 
   themeToggle.addEventListener("click", toggleTheme);
+
+  // Setup custom bangs event listeners
+  setupCustomBangsEventListeners();
 }
 
 const LS_DEFAULT_BANG = localStorage.getItem("default-bang") ?? "sxng";
@@ -137,6 +304,10 @@ function getBangredirectUrl() {
 
   // Remove the first bang from the query
   const cleanQuery = query.replace(/!\S+\s*/i, "").trim();
+
+  // If the query is just `!gh`, use `github.com` instead of `github.com/search?q=`
+  if (cleanQuery === "")
+    return selectedBang ? `https://${selectedBang.d}` : null;
 
   // Format of the url is:
   // https://www.google.com/search?q={{{s}}}
