@@ -1,12 +1,20 @@
 # Unduck (siesque fork)
 
+Fork of t3dotgg/unduck to implement more features.
+
+Added features:
+- **Configurable default bang
+- **Custom bangs
+
+## Original readme
+
 DuckDuckGo's bang redirects are too slow. Add the following URL as a custom search engine to your browser. Enables all of DuckDuckGo's bangs to work, but much faster.
 
 ```
 https://unduck.siesque.com?q=%s
 ```
 
-## How is it that much faster?
+### How is it that much faster?
 
 DuckDuckGo does their redirects server side. Their DNS is...not always great. Result is that it often takes ages.
 
