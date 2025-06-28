@@ -3,8 +3,8 @@
 Fork of t3dotgg/unduck to implement more features.
 
 Added features:
-- **Configurable default bang
-- **Custom bangs
+- Configurable default bang
+- Custom bangs
 
 ## Original readme
 
